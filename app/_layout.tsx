@@ -1,39 +1,37 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import { useColorScheme } from 'react-native';
+import { ThemeProvider } from '../context/ThemeContext';
+import { Colors } from '../constants/Colors';
+import { Animated } from 'react-native';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  const colorScheme = useColorScheme() || 'light';
+  const fadeAnim = new Animated.Value(1);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [colorScheme]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
+    <ThemeProvider>
+      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            headerStyle: {
+              backgroundColor: Colors[colorScheme].background,
+            },
+            headerTintColor: Colors[colorScheme].text,
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+      </Animated.View>
     </ThemeProvider>
   );
 }
