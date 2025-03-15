@@ -14,25 +14,50 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { Colors } from '../../constants/Colors';
 
-export default function LoginScreen() {
+export default function ForgotPasswordScreen() {
   const router = useRouter();
-  const { signIn, loading, error } = useAuth();
+  const { resetPassword, loading, error } = useAuth();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+  const handleResetPassword = async () => {
+    if (!email) {
+      Alert.alert('Error', 'Please enter your email address');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
 
     try {
-      await signIn(email, password);
-      router.replace('/(tabs)');
+      await resetPassword(email);
+      setIsSubmitted(true);
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Reset password error:', error);
     }
   };
+
+  if (isSubmitted) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.form}>
+          <Text style={styles.title}>Check Your Email</Text>
+          <Text style={styles.message}>
+            We've sent password reset instructions to your email address. Please check your inbox.
+          </Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push('/auth/login' as any)}
+          >
+            <Text style={styles.buttonText}>Back to Login</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -40,7 +65,10 @@ export default function LoginScreen() {
       style={styles.container}
     >
       <View style={styles.form}>
-        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.title}>Reset Password</Text>
+        <Text style={styles.subtitle}>
+          Enter your email address and we'll send you instructions to reset your password.
+        </Text>
         
         {error && <Text style={styles.error}>{error}</Text>}
         
@@ -54,40 +82,24 @@ export default function LoginScreen() {
           editable={!loading}
         />
         
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          editable={!loading}
-        />
-        
         <TouchableOpacity
           style={styles.button}
-          onPress={handleLogin}
+          onPress={handleResetPassword}
           disabled={loading}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Sign In</Text>
+            <Text style={styles.buttonText}>Send Reset Instructions</Text>
           )}
         </TouchableOpacity>
         
         <TouchableOpacity
-          onPress={() => router.push('/auth/forgot-password' as any)}
+          onPress={() => router.push('/auth/login' as any)}
           style={styles.link}
         >
-          <Text style={styles.linkText}>Forgot Password?</Text>
+          <Text style={styles.linkText}>Back to Login</Text>
         </TouchableOpacity>
-        
-        <View style={styles.registerContainer}>
-          <Text style={styles.registerText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => router.push('/auth/register' as any)}>
-            <Text style={styles.registerLink}>Sign Up</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -107,9 +119,22 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 10,
     textAlign: 'center',
     color: Colors.light.tint,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  message: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 24,
   },
   input: {
     borderWidth: 1,
@@ -141,17 +166,5 @@ const styles = StyleSheet.create({
   linkText: {
     color: Colors.light.tint,
     fontSize: 14,
-  },
-  registerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  registerText: {
-    color: '#666',
-  },
-  registerLink: {
-    color: Colors.light.tint,
-    fontWeight: '600',
   },
 }); 

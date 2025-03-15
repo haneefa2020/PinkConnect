@@ -1,45 +1,93 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, Text, Alert, ScrollView } from 'react-native';
-import { router } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useAuth } from '../../context/AuthContext';
+import { Colors } from '../../constants/Colors';
+import { UserData } from '../../lib/supabase';
 
 export default function RegisterScreen() {
+  const router = useRouter();
+  const { signUp, loading, error } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('parent'); // 'parent' or 'teacher'
+  const [role, setRole] = useState<'parent' | 'teacher'>('parent');
 
-  const handleRegister = async () => {
+  const validateForm = () => {
     if (!name || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
-      return;
+      return false;
     }
 
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
-      return;
+      return false;
     }
 
-    // TODO: Implement actual registration
-    // For now, just navigate to home
-    router.replace('/(tabs)');
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleRegister = async () => {
+    if (!validateForm()) return;
+
+    try {
+      const userData: Partial<UserData> = {
+        name,
+        email,
+        role,
+      };
+
+      await signUp(email, password, userData);
+      Alert.alert(
+        'Success',
+        'Registration successful! Please check your email to verify your account.',
+        [{ text: 'OK', onPress: () => router.push('/auth/login' as any) }]
+      );
+    } catch (error) {
+      console.error('Registration error:', error);
+    }
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <FontAwesome name="user-plus" size={64} color="#4A90E2" />
-          <Text style={styles.title}>Create Account</Text>
-        </View>
-        
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.form}>
+          <Text style={styles.title}>Create Account</Text>
+          
+          {error && <Text style={styles.error}>{error}</Text>}
+          
           <TextInput
             style={styles.input}
             placeholder="Full Name"
             value={name}
             onChangeText={setName}
+            editable={!loading}
           />
           
           <TextInput
@@ -47,8 +95,9 @@ export default function RegisterScreen() {
             placeholder="Email"
             value={email}
             onChangeText={setEmail}
-            keyboardType="email-address"
             autoCapitalize="none"
+            keyboardType="email-address"
+            editable={!loading}
           />
           
           <TextInput
@@ -57,6 +106,7 @@ export default function RegisterScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            editable={!loading}
           />
           
           <TextInput
@@ -65,33 +115,70 @@ export default function RegisterScreen() {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
+            editable={!loading}
           />
 
-          <View style={styles.roleSelector}>
-            <TouchableOpacity 
-              style={[styles.roleButton, role === 'parent' && styles.roleButtonActive]}
-              onPress={() => setRole('parent')}
-            >
-              <Text style={[styles.roleText, role === 'parent' && styles.roleTextActive]}>Parent</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.roleButton, role === 'teacher' && styles.roleButtonActive]}
-              onPress={() => setRole('teacher')}
-            >
-              <Text style={[styles.roleText, role === 'teacher' && styles.roleTextActive]}>Teacher</Text>
-            </TouchableOpacity>
+          <View style={styles.roleContainer}>
+            <Text style={styles.roleLabel}>I am a:</Text>
+            <View style={styles.roleButtons}>
+              <TouchableOpacity
+                style={[
+                  styles.roleButton,
+                  role === 'parent' && styles.roleButtonActive,
+                ]}
+                onPress={() => setRole('parent')}
+                disabled={loading}
+              >
+                <Text
+                  style={[
+                    styles.roleButtonText,
+                    role === 'parent' && styles.roleButtonTextActive,
+                  ]}
+                >
+                  Parent
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.roleButton,
+                  role === 'teacher' && styles.roleButtonActive,
+                ]}
+                onPress={() => setRole('teacher')}
+                disabled={loading}
+              >
+                <Text
+                  style={[
+                    styles.roleButtonText,
+                    role === 'teacher' && styles.roleButtonTextActive,
+                  ]}
+                >
+                  Teacher
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
           
-          <TouchableOpacity style={styles.button} onPress={handleRegister}>
-            <Text style={styles.buttonText}>Register</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleRegister}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Sign Up</Text>
+            )}
           </TouchableOpacity>
           
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.linkText}>Already have an account? Login</Text>
-          </TouchableOpacity>
+          <View style={styles.loginContainer}>
+            <Text style={styles.loginText}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => router.push('/auth/login' as any)}>
+              <Text style={styles.loginLink}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -100,70 +187,87 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  content: {
-    padding: 20,
-    justifyContent: 'center',
+  scrollContent: {
+    flexGrow: 1,
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: 40,
-    marginTop: 20,
+  form: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+    gap: 15,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginTop: 10,
-    color: '#333',
-  },
-  form: {
-    width: '100%',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: Colors.light.tint,
   },
   input: {
-    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#ddd',
     padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    fontSize: 16,
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
   },
-  roleSelector: {
+  roleContainer: {
+    marginVertical: 10,
+  },
+  roleLabel: {
+    fontSize: 16,
+    marginBottom: 10,
+    color: '#666',
+  },
+  roleButtons: {
     flexDirection: 'row',
-    marginBottom: 20,
     gap: 10,
   },
   roleButton: {
     flex: 1,
     padding: 15,
-    borderRadius: 10,
-    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.light.tint,
     alignItems: 'center',
   },
   roleButtonActive: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: Colors.light.tint,
   },
-  roleText: {
+  roleButtonText: {
+    color: Colors.light.tint,
     fontSize: 16,
-    color: '#666',
+    fontWeight: '600',
   },
-  roleTextActive: {
+  roleButtonTextActive: {
     color: '#fff',
-    fontWeight: 'bold',
   },
   button: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: Colors.light.tint,
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
-  linkText: {
-    color: '#4A90E2',
+  error: {
+    color: '#dc3545',
     textAlign: 'center',
-    marginTop: 15,
-    fontSize: 14,
+    marginBottom: 10,
+  },
+  loginContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  loginText: {
+    color: '#666',
+  },
+  loginLink: {
+    color: Colors.light.tint,
+    fontWeight: '600',
   },
 }); 

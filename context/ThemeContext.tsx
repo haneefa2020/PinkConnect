@@ -3,18 +3,17 @@ import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../constants/Colors';
 
-type ThemeContextType = {
+interface ThemeContextType {
   isDarkMode: boolean;
   toggleTheme: () => void;
   colorScheme: 'light' | 'dark';
-};
+}
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useColorScheme();
   const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
-  const colorScheme = isDarkMode ? 'dark' : 'light';
 
   // Load saved theme preference
   useEffect(() => {
@@ -47,17 +46,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const colorScheme = isDarkMode ? 'dark' : 'light' as const;
+
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleTheme, colorScheme }}>
       {children}
     </ThemeContext.Provider>
   );
-}
+};
 
-export function useTheme() {
+export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
-} 
+}; 
