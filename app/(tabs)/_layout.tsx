@@ -57,12 +57,11 @@ export default function TabLayout() {
         ),
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            position: 'absolute',
-          },
-          default: {},
-        }),
+        tabBarStyle: {
+          backgroundColor: isDarkMode ? '#000000' : Colors[colorScheme].background,
+          borderTopColor: Colors[colorScheme].tabIconDefault + '20',
+          borderTopWidth: 1,
+        },
       }}>
       <Tabs.Screen
         name="index"
