@@ -44,60 +44,63 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <View style={styles.logoContainer}>
-        <Text style={styles.title}>Welcome to PinkConnect</Text>
-        <Image
-          source={require('../../assets/images/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      </View>
-      <View style={[styles.form, { maxWidth }]}>
-        {error && <Text style={styles.error}>{error}</Text>}
+      <View style={{ flex: 1, justifyContent: 'center' }}>
+        <View style={styles.logoContainer}>
+          <Text style={styles.title}>Welcome to PinkConnect</Text>
+          <Image
+            source={require('../../assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
         
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          editable={!loading}
-        />
-        
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          editable={!loading}
-        />
-        
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Sign In</Text>
-          )}
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          onPress={() => router.push('/auth/forgot-password' as any)}
-          style={styles.link}
-        >
-          <Text style={styles.linkText}>Forgot Password?</Text>
-        </TouchableOpacity>
-        
-        <View style={styles.registerContainer}>
-          <Text style={styles.registerText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => router.push('/auth/register' as any)}>
-            <Text style={styles.registerLink}>Sign Up</Text>
+        <View style={[styles.form]}>
+          {error && <Text style={styles.error}>{error}</Text>}
+          
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            editable={!loading}
+          />
+          
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            editable={!loading}
+          />
+          
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Sign In</Text>
+            )}
           </TouchableOpacity>
+          
+          <TouchableOpacity
+            onPress={() => router.push('/auth/forgot-password' as any)}
+            style={styles.link}
+          >
+            <Text style={styles.linkText}>Forgot Password?</Text>
+          </TouchableOpacity>
+          
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>Don't have an account? </Text>
+            <TouchableOpacity onPress={() => router.push('/auth/register' as any)}>
+              <Text style={styles.registerLink}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -108,65 +111,65 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    justifyContent: 'center',
   },
   logoContainer: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 40,
-    gap: 20,
+    marginBottom: Platform.OS === 'web' ? 0 : 30,
   },
   logo: {
-    width: 200,
-    height: 200,
+    width: Platform.OS === 'web' ? 200 : 100,
+    height: Platform.OS === 'web' ? 200 : 100,
   },
   form: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-    gap: 15,
     alignSelf: 'center',
     width: '100%',
+    padding: Platform.OS === 'web' ? 20 : 16,
+    gap: 16,
+    maxWidth: Platform.OS === 'web' ? 400 : '90%',
   },
   title: {
-    fontSize: 28,
+    fontSize: Platform.OS === 'web' ? 28 : 22,
     fontWeight: 'bold',
     textAlign: 'center',
     color: Colors.light.tint,
-    marginBottom: 10,
+    marginBottom: Platform.OS === 'web' ? 10 : 20,
   },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
-    padding: 15,
+    padding: Platform.OS === 'web' ? 15 : 12,
     borderRadius: 8,
     backgroundColor: '#f8f9fa',
     width: '100%',
+    fontSize: Platform.OS === 'web' ? 16 : 14,
   },
   button: {
     backgroundColor: Colors.light.tint,
-    padding: 15,
+    padding: Platform.OS === 'web' ? 15 : 12,
     borderRadius: 8,
     alignItems: 'center',
     width: '100%',
+    marginTop: 8,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: Platform.OS === 'web' ? 16 : 15,
     fontWeight: '600',
   },
   error: {
     color: '#dc3545',
     textAlign: 'center',
     marginBottom: 10,
+    fontSize: Platform.OS === 'web' ? 14 : 13,
   },
   link: {
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 16,
   },
   linkText: {
     color: Colors.light.tint,
-    fontSize: 14,
+    fontSize: Platform.OS === 'web' ? 14 : 13,
   },
   registerContainer: {
     flexDirection: 'row',
@@ -175,9 +178,11 @@ const styles = StyleSheet.create({
   },
   registerText: {
     color: '#666',
+    fontSize: Platform.OS === 'web' ? 14 : 13,
   },
   registerLink: {
     color: Colors.light.tint,
     fontWeight: '600',
+    fontSize: Platform.OS === 'web' ? 14 : 13,
   },
 }); 
