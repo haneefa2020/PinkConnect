@@ -16,15 +16,17 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { Colors } from '../../constants/Colors';
 import { UserData } from '../../lib/supabase';
+import { Picker } from '@react-native-picker/picker';
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { signUp, loading, error, clearError } = useAuth();
-  const [name, setName] = useState('');
+  const { signUp, error, clearError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'parent' | 'teacher'>('parent');
+  const [fullName, setFullName] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'parent' | 'teacher'>('parent');
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setError] = useState('');
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
   const maxWidth = isWeb ? 400 : undefined;
@@ -42,7 +44,7 @@ export default function RegisterScreen() {
   };
 
   const handleRoleChange = (newRole: 'parent' | 'teacher') => {
-    setRole(newRole);
+    setSelectedRole(newRole);
     if (error) clearError();
   };
 
@@ -52,13 +54,8 @@ export default function RegisterScreen() {
   };
 
   const validateForm = () => {
-    if (!name || !email || !password || !confirmPassword) {
+    if (!fullName || !email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
-      return false;
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
       return false;
     }
 
@@ -80,43 +77,32 @@ export default function RegisterScreen() {
     if (!validateForm()) return;
 
     try {
-      const userData: Partial<UserData> = {
-        full_name: name,
-        email,
-        role,
-      };
+      setLoading(true);
+      const result = await signUp(email, password, {
+        full_name: fullName,
+        role: selectedRole,
+      });
 
-      const result = await signUp(email, password, userData);
-      
-      if (result && 'user' in result) {
+      if (result?.user) {
         Alert.alert(
-          'Success',
-          'Registration successful! Please check your email to verify your account before logging in.',
-          [{ text: 'OK', onPress: () => handleNavigation('/auth/login') }]
-        );
-      } else {
-        Alert.alert(
-          'Error',
-          'Registration failed. Please try again.'
+          'Registration Successful',
+          'Please check your email to confirm your account. Click the confirmation link in the email to complete your registration.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                clearError();
+                router.push('/auth/login');
+              },
+            },
+          ]
         );
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      let errorMessage = 'Registration failed. Please try again.';
-      
-      if (error?.message?.includes('User already registered')) {
-        errorMessage = 'This email is already registered. Please try logging in.';
-      } else if (error?.message?.includes('Failed to create user profile')) {
-        errorMessage = 'Failed to create user profile. Please try again or contact support.';
-      } else if (error?.message?.includes('Invalid email')) {
-        errorMessage = 'Please enter a valid email address.';
-      } else if (error?.message?.includes('Password')) {
-        errorMessage = error.message;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-      
-      Alert.alert('Registration Error', errorMessage);
+      setError(error.message || 'An error occurred during registration');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -134,8 +120,8 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder="Full Name"
-            value={name}
-            onChangeText={handleInputChange(setName)}
+            value={fullName}
+            onChangeText={handleInputChange(setFullName)}
             editable={!loading}
           />
           
@@ -158,22 +144,13 @@ export default function RegisterScreen() {
             editable={!loading}
           />
           
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChangeText={handleInputChange(setConfirmPassword)}
-            secureTextEntry
-            editable={!loading}
-          />
-
           <View style={styles.roleContainer}>
             <Text style={styles.roleLabel}>I am a:</Text>
             <View style={styles.roleButtons}>
               <TouchableOpacity
                 style={[
                   styles.roleButton,
-                  role === 'parent' && styles.roleButtonActive,
+                  selectedRole === 'parent' && styles.roleButtonActive,
                 ]}
                 onPress={() => handleRoleChange('parent')}
                 disabled={loading}
@@ -181,7 +158,7 @@ export default function RegisterScreen() {
                 <Text
                   style={[
                     styles.roleButtonText,
-                    role === 'parent' && styles.roleButtonTextActive,
+                    selectedRole === 'parent' && styles.roleButtonTextActive,
                   ]}
                 >
                   Parent
@@ -190,7 +167,7 @@ export default function RegisterScreen() {
               <TouchableOpacity
                 style={[
                   styles.roleButton,
-                  role === 'teacher' && styles.roleButtonActive,
+                  selectedRole === 'teacher' && styles.roleButtonActive,
                 ]}
                 onPress={() => handleRoleChange('teacher')}
                 disabled={loading}
@@ -198,7 +175,7 @@ export default function RegisterScreen() {
                 <Text
                   style={[
                     styles.roleButtonText,
-                    role === 'teacher' && styles.roleButtonTextActive,
+                    selectedRole === 'teacher' && styles.roleButtonTextActive,
                   ]}
                 >
                   Teacher

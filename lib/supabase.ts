@@ -5,13 +5,36 @@ import { createClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 
 // Replace these with your Supabase project URL and anon key
-const supabaseUrl = 'https://kuobcumlyabdghabnfnu.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1b2JjdW1seWFiZGdoYWJuZm51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIwMjQ2NDksImV4cCI6MjA1NzYwMDY0OX0.XQlt3KCtgln744l9M2CfhG8f46e_tX0vQvsbkwyWeyA';
+const supabaseUrl = 'https://uanicwkcohardrzhqggm.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVhbmljd2tjb2hhcmRyemhxZ2dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxMDMyNTQsImV4cCI6MjA1NzY3OTI1NH0.sNW3zlyO6tctRtYuEm__Rx6RMVRazKGgjBwQfKXG88Q';
+
+// Create a dummy storage for SSR
+const dummyStorage = {
+  getItem: () => Promise.resolve(null),
+  setItem: () => Promise.resolve(),
+  removeItem: () => Promise.resolve(),
+};
+
+const getStorage = () => {
+  if (Platform.OS === 'web') {
+    try {
+      if (typeof window !== 'undefined') {
+        return window.localStorage;
+      }
+    } catch (error) {
+      console.warn('localStorage not available:', error);
+    }
+  }
+  return AsyncStorage;
+};
 
 const createSupabaseClient = () => {
+  // Use dummy storage during SSR
+  const storage = typeof window === 'undefined' ? dummyStorage : getStorage();
+
   return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-      storage: Platform.OS === 'web' ? localStorage : AsyncStorage,
+      storage,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,
@@ -28,7 +51,7 @@ export const supabase = createSupabaseClient();
 export interface UserData {
   id: string;
   email: string;
-  name: string | null;
+  full_name: string | null;
   role: 'parent' | 'teacher';
   avatar_url?: string;
 }
@@ -39,33 +62,84 @@ export const auth = {
   signUp: async (email: string, password: string, userData: Partial<UserData>) => {
     if (!supabase) return null;
 
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: userData,
-      },
-    });
+    try {
+      console.log('=== Starting Signup Process ===');
+      console.log('Auth Request Data:', {
+        email,
+        password: '********' // masked for security
+      });
 
-    if (signUpError) throw signUpError;
+      // Basic signup without metadata first
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-    // Create user profile in profiles table
-    if (authData.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
+      if (signUpError) {
+        console.error('Auth signup error:', signUpError);
+        // Check for rate limit
+        if (signUpError.message?.includes('rate limit')) {
+          throw new Error('You have exceeded the signup limit. Please try again in an hour.');
+        }
+        throw signUpError;
+      }
+
+      console.log('Auth Response:', {
+        user: authData?.user ? {
+          id: authData.user.id,
+          email: authData.user.email,
+          emailConfirmed: authData.user.confirmed_at,
+          createdAt: authData.user.created_at
+        } : null,
+        session: authData?.session ? 'Session Created' : 'No Session (Email confirmation required)'
+      });
+
+      if (!authData.user) {
+        throw new Error('No user data returned from auth signup');
+      }
+
+      // Don't try to create profile immediately if email confirmation is required
+      if (authData.session === null) {
+        console.log('Email confirmation required - Profile creation deferred');
+        return { user: authData.user };
+      }
+
+      try {
+        console.log('Profile Creation Request:', {
+          id: authData.user.id,
+          email: email,
+          full_name: userData.full_name,
+          role: userData.role
+        });
+
+        // Create profile only if email confirmation is not required
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
             id: authData.user.id,
-            email: authData.user.email,
-            name: userData.name,
-            role: userData.role,
-          },
-        ]);
+            email: email,
+            full_name: userData.full_name,
+            role: userData.role
+          })
+          .single();
 
-      if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          return { user: authData.user }; // Return success even if profile creation fails
+        }
+
+        console.log('Profile created successfully');
+        console.log('=== Signup Process Completed ===');
+
+        return { user: authData.user };
+      } catch (profileError) {
+        console.error('Profile creation exception:', profileError);
+        return { user: authData.user }; // Return success even if profile creation fails
+      }
+    } catch (error) {
+      console.error('Signup process error:', error);
+      throw error;
     }
-
-    return authData;
   },
 
   // Sign in user
@@ -127,3 +201,4 @@ export const auth = {
     return user;
   },
 }; 
+

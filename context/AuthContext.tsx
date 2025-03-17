@@ -9,7 +9,8 @@ interface AuthContextType {
   loading: boolean;
   isLoading: boolean;
   error: string | null;
-  signUp: (email: string, password: string, userData: Partial<UserData>) => Promise<void>;
+  clearError: () => void;
+  signUp: (email: string, password: string, userData: Partial<UserData>) => Promise<{ user: any } | null>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -77,6 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     isLoading,
     error,
+    clearError: () => setError(null),
     signUp: async (email: string, password: string, userData: Partial<UserData>) => {
       try {
         setLoading(true);

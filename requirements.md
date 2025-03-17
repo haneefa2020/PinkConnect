@@ -36,7 +36,7 @@ The Montessori School Mobile App is designed to facilitate seamless communicatio
 
 ## Additional Considerations
 - **User-Friendly Interface:** The app should have an intuitive and visually appealing UI/UX.
-- **Multi-Platform Compatibility:** Should be available for both Android and iOS.
+- **Multi-Platform Compatibility:** Should be available for both Android, iOS and Web Browser.
 - **Push Notifications:** Users should receive instant updates for attendance, messages, and new posts.
 - **Data Privacy & Security:** Ensure secure data storage and access control mechanisms.
 
