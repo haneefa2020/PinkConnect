@@ -9,13 +9,9 @@ const supabaseUrl = 'https://kuobcumlyabdghabnfnu.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1b2JjdW1seWFiZGdoYWJuZm51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIwMjQ2NDksImV4cCI6MjA1NzYwMDY0OX0.XQlt3KCtgln744l9M2CfhG8f46e_tX0vQvsbkwyWeyA';
 
 const createSupabaseClient = () => {
-  if (Platform.OS === 'web') {
-    return null; // Return null for web platform during SSR
-  }
-
   return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-      storage: AsyncStorage,
+      storage: Platform.OS === 'web' ? localStorage : AsyncStorage,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,

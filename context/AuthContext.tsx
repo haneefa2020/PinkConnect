@@ -7,6 +7,7 @@ interface AuthContextType {
   user: UserData | null;
   session: Session | null;
   loading: boolean;
+  isLoading: boolean;
   error: string | null;
   signUp: (email: string, password: string, userData: Partial<UserData>) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -21,26 +22,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserData | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      setLoading(false);
-      return;
-    }
-
     checkUser();
-    const { data: { subscription } } = supabase?.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session?.user) {
         fetchUserProfile(session.user.id);
       } else {
         setUser(null);
       }
-    }) || { data: { subscription: null } };
+    });
 
     return () => {
-      subscription?.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -55,12 +52,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error checking user:', error);
     } finally {
       setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const fetchUserProfile = async (userId: string) => {
-    if (!supabase) return;
-
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -79,34 +75,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     loading,
+    isLoading,
     error,
     signUp: async (email: string, password: string, userData: Partial<UserData>) => {
       try {
         setLoading(true);
+        setIsLoading(true);
         setError(null);
-        await auth.signUp(email, password, userData);
+        const result = await auth.signUp(email, password, userData);
+        if (!result) {
+          throw new Error('Sign up failed');
+        }
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Sign up failed');
         throw error;
       } finally {
         setLoading(false);
+        setIsLoading(false);
       }
     },
     signIn: async (email: string, password: string) => {
       try {
         setLoading(true);
+        setIsLoading(true);
         setError(null);
-        await auth.signIn(email, password);
+        const result = await auth.signIn(email, password);
+        if (!result) {
+          throw new Error('Sign in failed');
+        }
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Invalid credentials');
         throw error;
       } finally {
         setLoading(false);
+        setIsLoading(false);
       }
     },
     signOut: async () => {
       try {
         setLoading(true);
+        setIsLoading(true);
         setError(null);
         await auth.signOut();
       } catch (error) {
@@ -114,11 +122,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       } finally {
         setLoading(false);
+        setIsLoading(false);
       }
     },
     resetPassword: async (email: string) => {
       try {
         setLoading(true);
+        setIsLoading(true);
         setError(null);
         await auth.resetPassword(email);
       } catch (error) {
@@ -126,11 +136,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       } finally {
         setLoading(false);
+        setIsLoading(false);
       }
     },
     updatePassword: async (newPassword: string) => {
       try {
         setLoading(true);
+        setIsLoading(true);
         setError(null);
         await auth.updatePassword(newPassword);
       } catch (error) {
@@ -138,6 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       } finally {
         setLoading(false);
+        setIsLoading(false);
       }
     },
   };

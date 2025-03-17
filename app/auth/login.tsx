@@ -9,6 +9,8 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Image,
+  useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
@@ -19,6 +21,9 @@ export default function LoginScreen() {
   const { signIn, loading, error } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web';
+  const maxWidth = isWeb ? 400 : undefined;
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -39,9 +44,15 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <View style={styles.form}>
-        <Text style={styles.title}>Welcome Back</Text>
-        
+      <View style={styles.logoContainer}>
+        <Text style={styles.title}>Welcome to PinkConnect</Text>
+        <Image
+          source={require('../../assets/images/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
+      <View style={[styles.form, { maxWidth }]}>
         {error && <Text style={styles.error}>{error}</Text>}
         
         <TextInput
@@ -98,18 +109,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  logoContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 40,
+    gap: 20,
+  },
+  logo: {
+    width: 200,
+    height: 200,
+  },
   form: {
     flex: 1,
     justifyContent: 'center',
     padding: 20,
     gap: 15,
+    alignSelf: 'center',
+    width: '100%',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
     textAlign: 'center',
     color: Colors.light.tint,
+    marginBottom: 10,
   },
   input: {
     borderWidth: 1,
@@ -117,12 +141,14 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     backgroundColor: '#f8f9fa',
+    width: '100%',
   },
   button: {
     backgroundColor: Colors.light.tint,
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
+    width: '100%',
   },
   buttonText: {
     color: '#fff',

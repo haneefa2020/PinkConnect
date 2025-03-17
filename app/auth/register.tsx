@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
@@ -24,6 +25,9 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<'parent' | 'teacher'>('parent');
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web';
+  const maxWidth = isWeb ? 400 : undefined;
 
   const validateForm = () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -77,7 +81,7 @@ export default function RegisterScreen() {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.form}>
+        <View style={[styles.form, { maxWidth }]}>
           <Text style={styles.title}>Create Account</Text>
           
           {error && <Text style={styles.error}>{error}</Text>}
@@ -195,9 +199,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
     gap: 15,
+    alignSelf: 'center',
+    width: '100%',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
@@ -209,9 +215,11 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     backgroundColor: '#f8f9fa',
+    width: '100%',
   },
   roleContainer: {
     marginVertical: 10,
+    width: '100%',
   },
   roleLabel: {
     fontSize: 16,
@@ -247,6 +255,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
+    width: '100%',
   },
   buttonText: {
     color: '#fff',
