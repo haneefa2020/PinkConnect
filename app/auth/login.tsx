@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -18,12 +18,34 @@ import { Colors } from '../../constants/Colors';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { signIn, loading, error } = useAuth();
+  const { signIn, loading, error, clearError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
   const maxWidth = isWeb ? 400 : undefined;
+
+  // Clear error when component unmounts or when navigating away
+  useEffect(() => {
+    return () => {
+      clearError();
+    };
+  }, []);
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (error) clearError();
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    if (error) clearError();
+  };
+
+  const handleNavigation = (route: string) => {
+    clearError();
+    router.push(route as any);
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -61,7 +83,7 @@ export default function LoginScreen() {
             style={styles.input}
             placeholder="Email"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={handleEmailChange}
             autoCapitalize="none"
             keyboardType="email-address"
             editable={!loading}
@@ -71,7 +93,7 @@ export default function LoginScreen() {
             style={styles.input}
             placeholder="Password"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={handlePasswordChange}
             secureTextEntry
             editable={!loading}
           />
@@ -89,7 +111,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
           
           <TouchableOpacity
-            onPress={() => router.push('/auth/forgot-password' as any)}
+            onPress={() => handleNavigation('/auth/forgot-password')}
             style={styles.link}
           >
             <Text style={styles.linkText}>Forgot Password?</Text>
@@ -97,7 +119,7 @@ export default function LoginScreen() {
           
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => router.push('/auth/register' as any)}>
+            <TouchableOpacity onPress={() => handleNavigation('/auth/register')}>
               <Text style={styles.registerLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
