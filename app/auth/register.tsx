@@ -230,17 +230,16 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    alignItems: 'center',
   },
   form: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-    gap: 15,
-    alignSelf: 'center',
     width: '100%',
+    maxWidth: 280,
+    padding: 16,
+    gap: 12,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
@@ -249,27 +248,29 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
-    padding: 15,
+    padding: 12,
     borderRadius: 8,
     backgroundColor: '#f8f9fa',
     width: '100%',
+    fontSize: 15,
   },
   roleContainer: {
-    marginVertical: 10,
+    marginVertical: 8,
     width: '100%',
   },
   roleLabel: {
-    fontSize: 16,
-    marginBottom: 10,
+    fontSize: 15,
+    marginBottom: 8,
     color: '#666',
+    marginLeft: 4,
   },
   roleButtons: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   roleButton: {
     flex: 1,
-    padding: 15,
+    padding: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: Colors.light.tint,
@@ -280,7 +281,7 @@ const styles = StyleSheet.create({
   },
   roleButtonText: {
     color: Colors.light.tint,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
   },
   roleButtonTextActive: {
@@ -288,32 +289,35 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: Colors.light.tint,
-    padding: 15,
+    padding: 12,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 8,
     width: '100%',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
   },
   error: {
     color: '#dc3545',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
+    fontSize: 14,
   },
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 16,
   },
   loginText: {
     color: '#666',
+    fontSize: 14,
   },
   loginLink: {
     color: Colors.light.tint,
     fontWeight: '600',
+    fontSize: 14,
   },
 }); 

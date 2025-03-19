@@ -6,10 +6,12 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { Colors } from '../constants/Colors';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -43,17 +45,22 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
+    <ScrollView style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogout}
+          >
+            <View style={styles.buttonContent}>
+              <FontAwesome name="sign-out" size={20} color="#fff" style={styles.buttonIcon} />
+              <Text style={styles.logoutButtonText}>Logout</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -61,28 +68,43 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    padding: 20,
+  },
+  content: {
+    alignItems: 'center',
+    paddingVertical: 16,
   },
   section: {
-    marginBottom: 24,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 16,
+    marginBottom: 12,
+    alignSelf: 'flex-start',
+    marginLeft: 16,
   },
   logoutButton: {
     backgroundColor: '#dc3545',
-    padding: Platform.OS === 'web' ? 15 : 12,
+    padding: 12,
     borderRadius: 8,
+    width: '90%',
+    maxWidth: 220,
+  },
+  buttonContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
-    maxWidth: Platform.OS === 'web' ? 400 : '100%',
+    justifyContent: 'center',
+  },
+  buttonIcon: {
+    marginRight: 8,
   },
   logoutButtonText: {
     color: '#fff',
-    fontSize: Platform.OS === 'web' ? 16 : 14,
+    fontSize: 15,
     fontWeight: '600',
+    textAlign: 'center',
   },
 }); 

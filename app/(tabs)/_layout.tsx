@@ -109,7 +109,7 @@ export default function TabLayout() {
         name="admin"
         options={{
           title: 'Admin',
-          tabBarIcon: ({ color }) => <FontAwesome name="cog" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesome name="shield" size={24} color={color} />,
         }}
       />
     </Tabs>
