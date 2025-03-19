@@ -23,6 +23,7 @@ export default function RegisterScreen() {
   const { signUp, error, clearError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [selectedRole, setSelectedRole] = useState<'parent' | 'teacher'>('parent');
   const [loading, setLoading] = useState(false);
@@ -54,8 +55,13 @@ export default function RegisterScreen() {
   };
 
   const validateForm = () => {
-    if (!fullName || !email || !password) {
+    if (!fullName || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
       return false;
     }
 
@@ -85,8 +91,8 @@ export default function RegisterScreen() {
 
       if (result?.user) {
         Alert.alert(
-          'Registration Successful',
-          'Please check your email to confirm your account. Click the confirmation link in the email to complete your registration.',
+          'Email Verification Required',
+          'A verification link has been sent to your email address. Please check your inbox and click the link to verify your account.\n\nAfter verification, you can log in to your account.',
           [
             {
               text: 'OK',
@@ -140,6 +146,15 @@ export default function RegisterScreen() {
             placeholder="Password"
             value={password}
             onChangeText={handleInputChange(setPassword)}
+            secureTextEntry
+            editable={!loading}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChangeText={handleInputChange(setConfirmPassword)}
             secureTextEntry
             editable={!loading}
           />
