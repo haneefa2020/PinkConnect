@@ -52,7 +52,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: Colors[colorScheme].text }]}>Appearance</Text>
           <TouchableOpacity
-            style={[styles.settingButton, { backgroundColor: Colors[colorScheme].tint + '20' }]}
+            style={[styles.button, { backgroundColor: Colors[colorScheme].tint + '20' }]}
             onPress={toggleTheme}
           >
             <View style={styles.buttonContent}>
@@ -62,7 +62,7 @@ export default function SettingsScreen() {
                 color={Colors[colorScheme].tint}
                 style={styles.buttonIcon}
               />
-              <Text style={[styles.settingText, { color: Colors[colorScheme].text }]}>
+              <Text style={[styles.buttonText, { color: Colors[colorScheme].text }]}>
                 {isDarkMode ? 'Light Mode' : 'Dark Mode'}
               </Text>
             </View>
@@ -72,7 +72,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: Colors[colorScheme].text }]}>Account</Text>
           <TouchableOpacity
-            style={styles.logoutButton}
+            style={[styles.button, { backgroundColor: '#dc3545' }]}
             onPress={handleLogout}
           >
             <View style={styles.buttonContent}>
@@ -82,7 +82,7 @@ export default function SettingsScreen() {
                 color="#fff"
                 style={styles.buttonIcon}
               />
-              <Text style={styles.logoutButtonText}>Logout</Text>
+              <Text style={[styles.buttonText, { color: '#fff' }]}>Logout</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -96,26 +96,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    alignItems: 'center',
-    paddingVertical: 16,
+    padding: Platform.OS === 'web' ? 20 : 16,
   },
   section: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 12,
-    alignSelf: 'flex-start',
-    marginLeft: 16,
+    marginLeft: 4,
   },
-  settingButton: {
-    padding: 12,
+  button: {
+    padding: Platform.OS === 'web' ? 15 : 12,
     borderRadius: 8,
-    width: '90%',
-    maxWidth: 220,
+    width: '100%',
+    marginTop: 8,
   },
   buttonContent: {
     flexDirection: 'row',
@@ -124,21 +120,10 @@ const styles = StyleSheet.create({
   },
   buttonIcon: {
     marginRight: 8,
+    width: 20,
   },
-  settingText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  logoutButton: {
-    backgroundColor: '#dc3545',
-    padding: 12,
-    borderRadius: 8,
-    width: '90%',
-    maxWidth: 220,
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 15,
+  buttonText: {
+    fontSize: Platform.OS === 'web' ? 16 : 15,
     fontWeight: '600',
     textAlign: 'center',
   },
