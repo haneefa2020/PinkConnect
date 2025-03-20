@@ -63,12 +63,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
-      if (error) throw error;
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
+      }
+
+      if (!data) {
+        console.log('No profile found for user:', userId);
+        setUser(null);
+        return;
+      }
+
       setUser(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
       setError(error instanceof Error ? error.message : 'An error occurred');
+      setUser(null);
     }
   };
 
@@ -88,6 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!result) {
           throw new Error('Sign up failed');
         }
+        return result;
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Sign up failed');
         throw error;

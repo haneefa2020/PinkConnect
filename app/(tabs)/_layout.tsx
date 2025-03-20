@@ -99,17 +99,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => <FontAwesome name="cog" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="admin"
         options={{
           title: 'Admin',
           tabBarIcon: ({ color }) => <FontAwesome name="shield" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <FontAwesome name="cog" size={24} color={color} />,
         }}
       />
     </Tabs>
