@@ -25,6 +25,7 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedRole, setSelectedRole] = useState<'parent' | 'teacher'>('parent');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setError] = useState('');
@@ -56,7 +57,7 @@ export default function RegisterScreen() {
 
   const validateForm = () => {
     if (!fullName || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Error', 'Please fill in all required fields');
       return false;
     }
 
@@ -76,6 +77,12 @@ export default function RegisterScreen() {
       return false;
     }
 
+    // Optional phone number validation
+    if (phoneNumber && !/^\+?[\d\s-]{10,}$/.test(phoneNumber)) {
+      Alert.alert('Error', 'Please enter a valid phone number');
+      return false;
+    }
+
     return true;
   };
 
@@ -87,6 +94,7 @@ export default function RegisterScreen() {
       const result = await signUp(email, password, {
         full_name: fullName,
         role: selectedRole,
+        phone_number: phoneNumber || undefined,
       });
 
       if (result?.user) {
@@ -125,7 +133,7 @@ export default function RegisterScreen() {
           
           <TextInput
             style={styles.input}
-            placeholder="Full Name"
+            placeholder="Full Name *"
             value={fullName}
             onChangeText={handleInputChange(setFullName)}
             editable={!loading}
@@ -133,7 +141,7 @@ export default function RegisterScreen() {
           
           <TextInput
             style={styles.input}
-            placeholder="Email"
+            placeholder="Email *"
             value={email}
             onChangeText={handleInputChange(setEmail)}
             autoCapitalize="none"
@@ -143,7 +151,16 @@ export default function RegisterScreen() {
           
           <TextInput
             style={styles.input}
-            placeholder="Password"
+            placeholder="Phone Number (Optional)"
+            value={phoneNumber}
+            onChangeText={handleInputChange(setPhoneNumber)}
+            keyboardType="phone-pad"
+            editable={!loading}
+          />
+          
+          <TextInput
+            style={styles.input}
+            placeholder="Password *"
             value={password}
             onChangeText={handleInputChange(setPassword)}
             secureTextEntry
@@ -152,7 +169,7 @@ export default function RegisterScreen() {
 
           <TextInput
             style={styles.input}
-            placeholder="Confirm Password"
+            placeholder="Confirm Password *"
             value={confirmPassword}
             onChangeText={handleInputChange(setConfirmPassword)}
             secureTextEntry

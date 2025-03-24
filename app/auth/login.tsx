@@ -21,6 +21,7 @@ export default function LoginScreen() {
   const { signIn, loading, error, clearError } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
   const maxWidth = isWeb ? 400 : undefined;
@@ -32,31 +33,57 @@ export default function LoginScreen() {
     };
   }, []);
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleEmailChange = (text: string) => {
-    setEmail(text);
+    setEmail(text.trim());
     if (error) clearError();
+    if (validationError) setValidationError(null);
   };
 
   const handlePasswordChange = (text: string) => {
     setPassword(text);
     if (error) clearError();
+    if (validationError) setValidationError(null);
   };
 
   const handleNavigation = (route: string) => {
     clearError();
+    setValidationError(null);
     router.push(route as any);
   };
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-
     try {
-      await signIn(email, password);
+      // Clear any existing errors
+      clearError();
+      setValidationError(null);
+
+      // Validate required fields
+      if (!email || !password) {
+        setValidationError('Please fill in all fields');
+        return;
+      }
+
+      // Validate email format
+      if (!validateEmail(email)) {
+        setValidationError('Please enter a valid email address');
+        return;
+      }
+
+      // Validate password length
+      if (password.length < 6) {
+        setValidationError('Password must be at least 6 characters long');
+        return;
+      }
+
+      await signIn(email.trim(), password);
       router.replace('/(tabs)');
     } catch (error) {
+      // Error is already handled by AuthContext
       console.error('Login error:', error);
     }
   };
@@ -77,10 +104,15 @@ export default function LoginScreen() {
         </View>
         
         <View style={[styles.form]}>
-          {error && <Text style={styles.error}>{error}</Text>}
+          {(error || validationError) && (
+            <Text style={styles.error}>{validationError || error}</Text>
+          )}
           
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              validationError && email === '' && { borderColor: '#dc3545' }
+            ]}
             placeholder="Email"
             value={email}
             onChangeText={handleEmailChange}
@@ -90,7 +122,10 @@ export default function LoginScreen() {
           />
           
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              validationError && password === '' && { borderColor: '#dc3545' }
+            ]}
             placeholder="Password"
             value={password}
             onChangeText={handlePasswordChange}

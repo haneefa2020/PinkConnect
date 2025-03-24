@@ -10,6 +10,7 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   clearError: () => void;
+  setError: (error: string | null) => void;
   signUp: (email: string, password: string, userData: Partial<UserData>) => Promise<{ user: any } | null>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -67,19 +68,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error fetching profile:', error);
-        throw error;
-      }
-
-      if (!data) {
-        console.log('No profile found for user:', userId);
+        setError('Unable to load user profile. Please try again.');
         setUser(null);
         return;
       }
 
+      if (!data) {
+        console.log('No profile found for user:', userId);
+        // Create a basic profile for the user
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: userData.user.email,
+              full_name: null,
+              role: 'parent' // Default role
+            });
+
+          if (insertError) {
+            console.error('Error creating profile:', insertError);
+            setError('Unable to create user profile. Please contact support.');
+            setUser(null);
+            return;
+          }
+
+          // Fetch the newly created profile
+          const { data: newProfile, error: fetchError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+          if (fetchError || !newProfile) {
+            console.error('Error fetching new profile:', fetchError);
+            setError('Unable to load user profile. Please try again.');
+            setUser(null);
+            return;
+          }
+
+          setUser(newProfile);
+          return;
+        }
+      }
+
       setUser(data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
-      setError(error instanceof Error ? error.message : 'An error occurred');
+      console.error('Error in profile management:', error);
+      setError('An unexpected error occurred. Please try again.');
       setUser(null);
     }
   };
@@ -91,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     error,
     clearError: () => setError(null),
+    setError,
     signUp: async (email: string, password: string, userData: Partial<UserData>) => {
       try {
         setLoading(true);
@@ -114,13 +152,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         setIsLoading(true);
         setError(null);
+
+        // Basic validation
+        if (!email || !password) {
+          setError('Email and password are required');
+          return;
+        }
+
         const result = await auth.signIn(email, password);
         if (!result) {
-          throw new Error('Sign in failed');
+          throw new Error('Unable to sign in. Please check your credentials.');
+        }
+        
+        // After successful login, fetch the user profile
+        if (result.user) {
+          await fetchUserProfile(result.user.id);
         }
       } catch (error) {
-        setError(error instanceof Error ? error.message : 'Invalid credentials');
-        throw error;
+        console.error('Login error:', error);
+        
+        // Handle specific error messages
+        if (error instanceof Error) {
+          // Use the specific error messages from the auth layer
+          setError(error.message);
+        } else {
+          setError('An unexpected error occurred. Please try again.');
+        }
+        
+        // Clear loading states but don't throw the error
+        // This prevents the app from crashing while still showing the error message
+        setLoading(false);
+        setIsLoading(false);
+        return;
       } finally {
         setLoading(false);
         setIsLoading(false);

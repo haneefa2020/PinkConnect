@@ -54,6 +54,9 @@ export interface UserData {
   full_name: string | null;
   role: 'parent' | 'teacher';
   avatar_url?: string;
+  phone_number?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Auth helper functions
@@ -109,7 +112,8 @@ export const auth = {
           id: authData.user.id,
           email: email,
           full_name: userData.full_name,
-          role: userData.role
+          role: userData.role,
+          phone_number: userData.phone_number
         });
 
         // Create profile only if email confirmation is not required
@@ -119,7 +123,8 @@ export const auth = {
             id: authData.user.id,
             email: email,
             full_name: userData.full_name,
-            role: userData.role
+            role: userData.role,
+            phone_number: userData.phone_number
           })
           .single();
 
@@ -146,21 +151,106 @@ export const auth = {
   signIn: async (email: string, password: string) => {
     if (!supabase) return null;
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      console.log('=== Starting Login Process ===');
+      
+      // Basic validation
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
 
-    if (error) throw error;
-    return data;
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      console.log('Auth Request:', { email, password: '********' });
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('Login error:', error);
+        
+        // Handle specific AuthApiError cases
+        if ('name' in error && error.name === 'AuthApiError') {
+          if (error.message?.includes('Invalid login credentials')) {
+            throw new Error('The email or password you entered is incorrect');
+          } else if (error.message?.includes('Email not confirmed')) {
+            throw new Error('Please verify your email address before signing in');
+          } else if (error.message?.includes('rate limit')) {
+            throw new Error('Too many login attempts. Please try again in a few minutes');
+          } else if (error.status === 400) {
+            throw new Error('Invalid login attempt. Please check your credentials');
+          } else if (error.status === 422) {
+            throw new Error('Invalid email format');
+          }
+        }
+        
+        // For any other errors
+        throw new Error('Unable to sign in. Please try again later');
+      }
+
+      if (!data?.user || !data?.session) {
+        throw new Error('Login successful but no user data received');
+      }
+
+      console.log('Login successful:', {
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          lastSignIn: data.user.last_sign_in_at
+        },
+        session: 'Session Created'
+      });
+
+      console.log('=== Login Process Completed ===');
+      return data;
+    } catch (error) {
+      console.error('Login process error:', error);
+      throw error;
+    }
   },
 
   // Sign out user
   signOut: async () => {
     if (!supabase) return;
 
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      console.log('=== Starting Logout Process ===');
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Logout error:', error);
+        throw error;
+      }
+
+      // Clear any stored session data
+      if (Platform.OS === 'web') {
+        try {
+          localStorage.removeItem('supabase.auth.token');
+          localStorage.removeItem('supabase.auth.refreshToken');
+        } catch (e) {
+          console.warn('Error clearing local storage:', e);
+        }
+      } else {
+        try {
+          await AsyncStorage.removeItem('supabase.auth.token');
+          await AsyncStorage.removeItem('supabase.auth.refreshToken');
+        } catch (e) {
+          console.warn('Error clearing async storage:', e);
+        }
+      }
+
+      console.log('=== Logout Process Completed ===');
+    } catch (error) {
+      console.error('Logout process error:', error);
+      throw error;
+    }
   },
 
   // Reset password

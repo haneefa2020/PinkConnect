@@ -20,30 +20,42 @@ export default function SettingsScreen() {
   const { colorScheme, isDarkMode, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await signOut();
-              router.replace('/auth/login');
-            } catch (error) {
-              console.error('Logout error:', error);
-              Alert.alert('Error', 'Failed to logout. Please try again.');
-            }
+    if (Platform.OS === 'web') {
+      // For web, don't show the Alert dialog
+      try {
+        await signOut();
+        router.replace('/auth/login');
+      } catch (error) {
+        console.error('Logout error:', error);
+        Alert.alert('Error', 'Failed to logout. Please try again.');
+      }
+    } else {
+      // For mobile platforms, show the confirmation dialog
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
           },
-        },
-      ],
-      { cancelable: true }
-    );
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await signOut();
+                router.replace('/auth/login');
+              } catch (error) {
+                console.error('Logout error:', error);
+                Alert.alert('Error', 'Failed to logout. Please try again.');
+              }
+            },
+          },
+        ],
+        { cancelable: true }
+      );
+    }
   };
 
   return (
@@ -74,6 +86,9 @@ export default function SettingsScreen() {
           <TouchableOpacity
             style={[styles.button, { backgroundColor: '#dc3545' }]}
             onPress={handleLogout}
+            accessibilityLabel="Logout"
+            accessibilityRole="button"
+            accessibilityHint="Double tap to log out of your account"
           >
             <View style={styles.buttonContent}>
               <FontAwesome
@@ -97,6 +112,9 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Platform.OS === 'web' ? 20 : 16,
+    maxWidth: Platform.OS === 'web' ? 600 : undefined,
+    width: '100%',
+    alignSelf: 'center',
   },
   section: {
     marginBottom: 24,
@@ -112,6 +130,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: '100%',
     marginTop: 8,
+    ...(Platform.OS === 'web' ? { cursor: 'pointer' as const } : {}),
   },
   buttonContent: {
     flexDirection: 'row',
